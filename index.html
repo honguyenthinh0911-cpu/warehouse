@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>GALAXY FURNITURE - QUẢN LÝ XUẤT NHẬP KHO</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #FF6600;
+      color: white;
+    }
+    h2 { text-align: center; }
+    .form-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 1100px;
+      margin: auto;
+      position: relative;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin: 5px;
+    }
+    label { margin-bottom: 3px; font-size: 14px; }
+    input, select {
+      padding: 6px;
+      border: none;
+      border-radius: 4px;
+      color: black;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      border-bottom: 1px dashed #fff;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .row .form-group { flex: 1; min-width: 120px; }
+    .short { max-width: 80px; }
+    .tiny { max-width: 100px; }
+    .wide { min-width: 250px; }
+    .actions { display: flex; gap: 10px; margin-top: 10px; }
+    button {
+      padding: 8px 12px;
+      background: #222;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover { background: #444; }
+    #status { margin-top: 15px; font-weight: bold; }
+    #webhook-section {
+      margin-bottom: 15px;
+      background: rgba(255,255,255,0.15);
+      padding: 10px;
+      border-radius: 6px;
+      max-width: 400px;
+    }
+    #toggleWebhook {
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 14px;
+    }
+    .submit-btn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>GALAXY FURNITURE - QUẢN LÝ XUẤT NHẬP KHO</h2>
+
+  <div class="form-container">
+    <!-- Webhook -->
+    <div id="webhook-section">
+      <button id="toggleWebhook">▼ Webhook n8n (POST)</button>
+      <div id="webhookInputs" style="display:none; margin-top:10px;">
+        <input type="text" id="webhookUrl" placeholder="Dán link webhook tại đây" style="width:100%">
+        <button id="saveWebhook">💾 Lưu Webhook</button>
+      </div>
+    </div>
+
+    <!-- Phần chọn chung -->
+    <div class="row">
+      <div class="form-group">
+        <label>Hành động</label>
+        <select id="hanhdong" onchange="toggleLayout()" required>
+          <option value="nhap">Nhập kho</option>
+          <option value="xuat">Xuất kho</option>
+        </select>
+      </div>
+      <div class="form-group wide">
+        <label>Khách hàng</label>
+        <select id="khachhang"></select>
+      </div>
+      <div class="form-group">
+        <label>Loại vật tư</label>
+        <select id="loaivattu"></select>
+      </div>
+    </div>
+
+    <!-- Layout nhập kho -->
+    <div id="layoutNhap">
+      <div id="formNhap"></div>
+      <div class="actions">
+        <button type="button" onclick="addRow('nhap')">➕ Thêm dòng nhập</button>
+      </div>
+    </div>
+
+    <!-- Layout xuất kho -->
+    <div id="layoutXuat" style="display:none;">
+      <div id="formXuat"></div>
+      <div class="actions">
+        <button type="button" onclick="addRow('xuat')">➕ Thêm dòng xuất</button>
+      </div>
+    </div>
+
+    <form id="inventoryForm">
+      <button type="submit" class="submit-btn">📩 Nhập dữ liệu</button>
+    </form>
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const khachHangList = [
+      "ROVECONCEPTS","ROVECONCEPTS CB2","BEALLS","BURLINGTON","CLI FURNITURE",
+      "KIRKLAND","BLUEROCK SILC","BLUEROCK SULLIVAN","ROYAL DESIGN",
+      "TRENDRUM","VENTURE HOME","PROVINCIAL HOME"
+    ];
+    const vatTuList = [
+      "VẬT TƯ NGŨ KIM","VẬT TƯ METAL","ĐÁ","GIA CÔNG HÀNG TRẮNG","NỆM",
+      "BAO BÌ CARTON","MÚT XỐP","TEM NHÃN (LABEL)","NGUYÊN LIỆU","UỐN CONG",
+      "SƠN","VẬT TƯ NGOÀI ĐỊNH MỨC"
+    ];
+
+    const webhookUrlInput = document.getElementById("webhookUrl");
+    const khachhangSelect = document.getElementById("khachhang");
+    const loaivattuSelect = document.getElementById("loaivattu");
+
+    khachHangList.forEach(k => {
+      let opt = document.createElement("option");
+      opt.value = k; opt.textContent = k;
+      khachhangSelect.appendChild(opt);
+    });
+    vatTuList.forEach(v => {
+      let opt = document.createElement("option");
+      opt.value = v; opt.textContent = v;
+      loaivattuSelect.appendChild(opt);
+    });
+
+    function toggleLayout() {
+      const action = document.getElementById("hanhdong").value;
+      document.getElementById("layoutNhap").style.display = (action === "nhap") ? "block" : "none";
+      document.getElementById("layoutXuat").style.display = (action === "xuat") ? "block" : "none";
+    }
+
+    function addRow(type) {
+      const container = (type === "nhap") ? document.getElementById("formNhap") : document.getElementById("formXuat");
+      const row = document.createElement("div");
+      row.className = "row";
+
+      if (type === "nhap") {
+        row.innerHTML = `
+          <div class="form-group"><label>PO</label><input type="text" name="po"></div>
+          <div class="form-group"><label>Mã vật tư</label><input type="text" name="mavattu"></div>
+          <div class="form-group short"><label>Số lượng</label><input type="number" name="soluong"></div>
+          <div class="form-group tiny"><label>Lần nhập</label><input type="number" name="lan"></div>
+          <div class="form-group"><label>Ngày</label><input type="date" name="ngay"></div>
+          <div class="form-group"><label>Hình ảnh</label><input type="file" name="hinhanh" accept="image/*"></div>
+          <div class="form-group"><label>&nbsp;</label><button type="button" onclick="this.parentElement.parentElement.remove()">❌ Xóa</button></div>
+        `;
+      } else {
+        row.innerHTML = `
+          <div class="form-group"><label>PO</label><input type="text" name="po"></div>
+          <div class="form-group"><label>Mã vật tư</label><input type="text" name="mavattu"></div>
+          <div class="form-group"><label>Mã sản phẩm</label><input type="text" name="masp"></div>
+          <div class="form-group short"><label>Số lượng</label><input type="number" name="soluong"></div>
+          <div class="form-group tiny"><label>Lần xuất</label><input type="number" name="lan"></div>
+          <div class="form-group"><label>Ngày</label><input type="date" name="ngay"></div>
+          <div class="form-group"><label>Hình ảnh</label><input type="file" name="hinhanh" accept="image/*"></div>
+          <div class="form-group"><label>&nbsp;</label><button type="button" onclick="this.parentElement.parentElement.remove()">❌ Xóa</button></div>
+        `;
+      }
+
+      container.appendChild(row);
+    }
+
+    // Webhook: toggle, save, load
+    document.getElementById("toggleWebhook").addEventListener("click", () => {
+      const section = document.getElementById("webhookInputs");
+      section.style.display = section.style.display === "none" ? "block" : "none";
+    });
+
+    document.getElementById("saveWebhook").addEventListener("click", () => {
+      const url = webhookUrlInput.value.trim();
+      if (!url) {
+        alert("⚠️ Vui lòng nhập webhook trước khi lưu!");
+        return;
+      }
+      localStorage.setItem("webhookUrl", url);
+      alert("✅ Webhook đã được lưu!");
+    });
+
+    window.addEventListener("load", () => {
+      const savedWebhook = localStorage.getItem("webhookUrl");
+      if (savedWebhook) webhookUrlInput.value = savedWebhook;
+      addRow("nhap"); // mặc định khởi tạo 1 dòng nhập
+    });
+
+    // Helper convert file to Base64
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    // Submit dữ liệu
+    document.getElementById("inventoryForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+
+      const webhookUrl = webhookUrlInput.value.trim() || localStorage.getItem("webhookUrl");
+      if (!webhookUrl) {
+        alert("⚠️ Chưa có webhook. Vui lòng nhập hoặc lưu webhook trước!");
+        return;
+      }
+
+      const hanhdong = document.getElementById("hanhdong").value;
+      const khachhang = document.getElementById("khachhang").value;
+      const loaivattu = document.getElementById("loaivattu").value;
+
+      const rows = (hanhdong === "nhap")
+        ? document.querySelectorAll("#formNhap .row")
+        : document.querySelectorAll("#formXuat .row");
+
+      const data = [];
+      for (let r of rows) {
+        let fileInput = r.querySelector('[name="hinhanh"]');
+        let fileData = null;
+        if (fileInput && fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          fileData = await toBase64(file);
+        }
+
+        const rowData = {
+          hanhdong,
+          khachhang,
+          loaivattu,
+          po: r.querySelector('[name="po"]').value,
+          ma_vattu: r.querySelector('[name="mavattu"]').value,
+          so_luong: parseInt(r.querySelector('[name="soluong"]').value),
+          lan: parseInt(r.querySelector('[name="lan"]').value),
+          ngay: r.querySelector('[name="ngay"]').value,
+          hinhanh: fileData
+        };
+
+        if (hanhdong === "xuat") {
+          rowData.ma_sp = r.querySelector('[name="masp"]').value;
+        }
+
+        data.push(rowData);
+      }
+
+      try {
+        let res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        document.getElementById("status").innerText = res.ok
+          ? "✅ Gửi thành công"
+          : "❌ Lỗi khi gửi";
+      } catch (err) {
+        document.getElementById("status").innerText = "❌ Lỗi kết nối";
+      }
+    });
+  </script>
+</body>
+</html>
