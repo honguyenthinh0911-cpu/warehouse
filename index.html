@@ -69,10 +69,16 @@
       color: white;
       font-size: 14px;
     }
-    .submit-btn {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
+    /* Hàng chứa Tên người nhập + nút gửi */
+    .submit-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .submit-row input {
+      width: 200px;
     }
   </style>
 </head>
@@ -106,6 +112,11 @@
         <label>Loại vật tư</label>
         <select id="loaivattu"></select>
       </div>
+      <!-- Ô Nhà cung cấp -->
+      <div class="form-group">
+        <label>Nhà cung cấp</label>
+        <input type="text" id="nhacungcap" placeholder="Nhập nhà cung cấp">
+      </div>
     </div>
 
     <!-- Layout nhập kho -->
@@ -125,12 +136,17 @@
     </div>
 
     <form id="inventoryForm">
-      <button type="submit" class="submit-btn">📩 Nhập dữ liệu</button>
+      <!-- Ô Tên người nhập + nút gửi cùng hàng -->
+      <div class="submit-row">
+        <input type="text" id="tennguoinhap" placeholder="Tên người nhập">
+        <button type="submit" class="submit-btn">📩 Nhập dữ liệu</button>
+      </div>
     </form>
 
     <p id="status"></p>
   </div>
 
+  <!-- Giữ nguyên phần JS -->
   <script>
     const khachHangList = [
       "ROVECONCEPTS","ROVECONCEPTS CB2","BEALLS","BURLINGTON","CLI FURNITURE",
@@ -195,7 +211,6 @@
       container.appendChild(row);
     }
 
-    // Webhook: toggle, save, load
     document.getElementById("toggleWebhook").addEventListener("click", () => {
       const section = document.getElementById("webhookInputs");
       section.style.display = section.style.display === "none" ? "block" : "none";
@@ -214,10 +229,9 @@
     window.addEventListener("load", () => {
       const savedWebhook = localStorage.getItem("webhookUrl");
       if (savedWebhook) webhookUrlInput.value = savedWebhook;
-      addRow("nhap"); // mặc định khởi tạo 1 dòng nhập
+      addRow("nhap");
     });
 
-    // Helper convert file to Base64
     function toBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -227,7 +241,6 @@
       });
     }
 
-    // Submit dữ liệu
     document.getElementById("inventoryForm").addEventListener("submit", async function(e){
       e.preventDefault();
 
@@ -240,6 +253,8 @@
       const hanhdong = document.getElementById("hanhdong").value;
       const khachhang = document.getElementById("khachhang").value;
       const loaivattu = document.getElementById("loaivattu").value;
+      const nhacungcap = document.getElementById("nhacungcap").value;
+      const tennguoinhap = document.getElementById("tennguoinhap").value;
 
       const rows = (hanhdong === "nhap")
         ? document.querySelectorAll("#formNhap .row")
@@ -250,14 +265,15 @@
         let fileInput = r.querySelector('[name="hinhanh"]');
         let fileData = null;
         if (fileInput && fileInput.files.length > 0) {
-          const file = fileInput.files[0];
-          fileData = await toBase64(file);
+          fileData = await toBase64(fileInput.files[0]);
         }
 
         const rowData = {
           hanhdong,
           khachhang,
           loaivattu,
+          nhacungcap,
+          tennguoinhap,
           po: r.querySelector('[name="po"]').value,
           ma_vattu: r.querySelector('[name="mavattu"]').value,
           so_luong: parseInt(r.querySelector('[name="soluong"]').value),
