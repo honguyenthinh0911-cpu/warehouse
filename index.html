@@ -113,9 +113,9 @@
         <select id="loaivattu"></select>
       </div>
       <!-- Ô Nhà cung cấp -->
-      <div class="form-group">
+      <div class="form-group wide">
         <label>Nhà cung cấp</label>
-        <input type="text" id="nhacungcap" placeholder="Nhập nhà cung cấp">
+        <select id="nhacungcap"></select>
       </div>
     </div>
 
@@ -149,19 +149,28 @@
   <!-- Giữ nguyên phần JS -->
   <script>
     const khachHangList = [
+      "", // option trống
       "ROVECONCEPTS","ROVECONCEPTS CB2","BEALLS","BURLINGTON","CLI FURNITURE",
       "KIRKLAND","BLUEROCK SILC","BLUEROCK SULLIVAN","ROYAL DESIGN",
       "TRENDRUM","VENTURE HOME","PROVINCIAL HOME"
     ];
     const vatTuList = [
+      "", // option trống
       "VẬT TƯ NGŨ KIM","VẬT TƯ METAL","ĐÁ","GIA CÔNG HÀNG TRẮNG","NỆM",
       "BAO BÌ CARTON","MÚT XỐP","TEM NHÃN (LABEL)","NGUYÊN LIỆU","UỐN CONG",
       "SƠN","VẬT TƯ NGOÀI ĐỊNH MỨC"
+    ];
+    const nhaCungCapList = [
+      "", // option trống
+      "BB MINH KHANG","BB NAM THANH","BB NAM LONG","HÀ BẮC","NHẬT NAM","TÂN HOÀNG SANG",
+      "THÁI BÌNH DƯƠNG","ECO","HOÀNG HOÀNG LINH","HẢI VÂN KHÁNH","MẠNH NHƯ PHONG",
+      "SOFA QL","SOFA MINH HẠO","TÂM TÀI","NHÁM HỒNG PHÚ","GIA MINH CÁT"
     ];
 
     const webhookUrlInput = document.getElementById("webhookUrl");
     const khachhangSelect = document.getElementById("khachhang");
     const loaivattuSelect = document.getElementById("loaivattu");
+    const nhacungcapSelect = document.getElementById("nhacungcap");
 
     khachHangList.forEach(k => {
       let opt = document.createElement("option");
@@ -172,6 +181,11 @@
       let opt = document.createElement("option");
       opt.value = v; opt.textContent = v;
       loaivattuSelect.appendChild(opt);
+    });
+    nhaCungCapList.forEach(n => {
+      let opt = document.createElement("option");
+      opt.value = n; opt.textContent = n;
+      nhacungcapSelect.appendChild(opt);
     });
 
     function toggleLayout() {
