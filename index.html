@@ -264,11 +264,11 @@
         return;
       }
 
-      const hanhdong = document.getElementById("hanhdong").value;
-      const khachhang = document.getElementById("khachhang").value;
-      const loaivattu = document.getElementById("loaivattu").value;
-      const nhacungcap = document.getElementById("nhacungcap").value;
-      const tennguoinhap = document.getElementById("tennguoinhap").value;
+      const hanhdong     = document.getElementById("hanhdong").value.trim();
+      const khachhang    = document.getElementById("khachhang").value.trim();
+      const loaivattu    = document.getElementById("loaivattu").value.trim();
+      const nhacungcap   = document.getElementById("nhacungcap").value.trim();
+      const tennguoinhap = document.getElementById("tennguoinhap").value.trim();
 
       const rows = (hanhdong === "nhap")
         ? document.querySelectorAll("#formNhap .row")
@@ -288,16 +288,16 @@
           loaivattu,
           nhacungcap,
           tennguoinhap,
-          po: r.querySelector('[name="po"]').value,
-          ma_vattu: r.querySelector('[name="mavattu"]').value,
-          so_luong: parseInt(r.querySelector('[name="soluong"]').value),
-          lan: parseInt(r.querySelector('[name="lan"]').value),
-          ngay: r.querySelector('[name="ngay"]').value,
+          po: r.querySelector('[name="po"]').value.trim(),
+          ma_vattu: r.querySelector('[name="mavattu"]').value.trim(),
+          so_luong: parseInt((r.querySelector('[name="soluong"]').value || "0").trim()),
+          lan: parseInt((r.querySelector('[name="lan"]').value || "0").trim()),
+          ngay: r.querySelector('[name="ngay"]').value.trim(),
           hinhanh: fileData
         };
 
         if (hanhdong === "xuat") {
-          rowData.ma_sp = r.querySelector('[name="masp"]').value;
+          rowData.ma_sp = r.querySelector('[name="masp"]').value.trim();
         }
 
         data.push(rowData);
